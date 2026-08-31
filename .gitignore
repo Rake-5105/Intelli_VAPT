@@ -25,3 +25,8 @@ storage/
 # OS
 Thumbs.db
 .DS_Store
+
+# Binaries & Executables
+tools/bin/
+*.exe
+*.zip
