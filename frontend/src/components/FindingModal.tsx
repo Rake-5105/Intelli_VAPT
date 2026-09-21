@@ -39,17 +39,17 @@ export function FindingModal({ finding, onClose, onSave }: FindingModalProps) {
       <div className="modal" style={{ maxWidth: 640 }}>
         <div className="section-title">
           <div>
-            <span style={{ fontSize: 11, fontWeight: 700, color: getSeverityColor(finding.severity) }}>
+            <span style={{ fontSize: 15, fontWeight: 700, color: getSeverityColor(finding.severity) }}>
               [{finding.severity}] {finding.cvss_score ? `CVSS ${finding.cvss_score}` : ""}
             </span>
-            <h2 style={{ fontSize: 18, marginTop: 4 }}>{finding.title}</h2>
+            <h2 style={{ fontSize: 20, marginTop: 4 }}>{finding.title}</h2>
           </div>
           <button type="button" className="secondary" onClick={onClose}>
             Close
           </button>
         </div>
 
-        <div style={{ display: "grid", gap: 10, fontSize: 12, color: "#d5c4a1", background: "#1d2021", padding: 12, borderRadius: 4 }}>
+        <div style={{ display: "grid", gap: 10, fontSize: 16, color: "#d5c4a1", background: "#1d2021", padding: 14, borderRadius: 4 }}>
           <div><strong>Endpoint:</strong> <span style={{ color: "#83a598" }}>{finding.endpoint}</span></div>
           {finding.cwe && <div><strong>CWE:</strong> {finding.cwe}</div>}
           {finding.cve && <div><strong>CVE:</strong> {finding.cve}</div>}
@@ -57,12 +57,12 @@ export function FindingModal({ finding, onClose, onSave }: FindingModalProps) {
         </div>
 
         <form onSubmit={handleSubmit} style={{ display: "grid", gap: 14, marginTop: 10 }}>
-          <label style={{ display: "grid", gap: 6, fontSize: 12 }}>
+          <label style={{ display: "grid", gap: 6, fontSize: 16 }}>
             Remediation Status
             <select
               value={status}
               onChange={(e) => setStatus(e.target.value)}
-              style={{ padding: 8, background: "#1d2021", border: "1px solid #504945", color: "#ebdbb2" }}
+              style={{ padding: 10, fontSize: 16, background: "#1d2021", border: "1px solid #504945", color: "#ebdbb2" }}
             >
               <option value="OPEN">OPEN (Unaddressed)</option>
               <option value="IN_PROGRESS">IN_PROGRESS (Fix in development)</option>
@@ -72,14 +72,14 @@ export function FindingModal({ finding, onClose, onSave }: FindingModalProps) {
             </select>
           </label>
 
-          <label style={{ display: "grid", gap: 6, fontSize: 12 }}>
+          <label style={{ display: "grid", gap: 6, fontSize: 16 }}>
             Remediation Notes / Fix Guidance
             <textarea
               rows={4}
               value={remediation}
               onChange={(e) => setRemediation(e.target.value)}
               placeholder="Document the code fix, patch version, or developer instructions..."
-              style={{ padding: 8, background: "#1d2021", border: "1px solid #504945", color: "#ebdbb2" }}
+              style={{ padding: 10, fontSize: 16, background: "#1d2021", border: "1px solid #504945", color: "#ebdbb2" }}
             />
           </label>
 

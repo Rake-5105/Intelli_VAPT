@@ -42,20 +42,20 @@ export function ToastProvider({ children }: { children: ReactNode }) {
               background: "#282828",
               border: `1px solid ${t.type === "error" ? "#fb4934" : t.type === "success" ? "#b8bb26" : "#83a598"}`,
               color: "#ebdbb2",
-              padding: "12px 18px",
-              fontSize: "12px",
+              padding: "14px 20px",
+              fontSize: "16px",
               borderRadius: "4px",
               boxShadow: "0 4px 12px rgba(0,0,0,0.5)",
               display: "flex",
               justifyContent: "space-between",
               alignItems: "center",
-              minWidth: "260px"
+              minWidth: "280px"
             }}
           >
             <span>{t.message}</span>
             <button
               onClick={() => removeToast(t.id)}
-              style={{ background: "transparent", border: 0, color: "#a89984", cursor: "pointer", marginLeft: 10, fontSize: 14 }}
+              style={{ background: "transparent", border: 0, color: "#a89984", cursor: "pointer", marginLeft: 10, fontSize: 18 }}
             >
               &times;
             </button>

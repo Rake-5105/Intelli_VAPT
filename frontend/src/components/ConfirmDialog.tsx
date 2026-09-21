@@ -32,7 +32,7 @@ export function ConfirmDialog({
             Close
           </button>
         </div>
-        <p className="muted" style={{ fontSize: 13, margin: "10px 0" }}>
+        <p className="muted" style={{ fontSize: 17, margin: "10px 0" }}>
           {message}
         </p>
         <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, marginTop: 15 }}>

@@ -11,12 +11,12 @@ from pydantic import BaseModel, EmailStr, Field
 
 class Register(BaseModel):
     name: str = Field(min_length=2, max_length=120)
-    email: EmailStr
+    email: str = Field(min_length=3, max_length=255)
     password: str = Field(min_length=12, max_length=128)
 
 
 class Login(BaseModel):
-    email: EmailStr
+    email: str = Field(min_length=3, max_length=255)
     password: str
 
 

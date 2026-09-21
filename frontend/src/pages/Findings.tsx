@@ -73,11 +73,11 @@ export function Findings({ findings, onSaveFinding, projectName = "VAPT" }: Find
     <>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
         <div style={{ display: "flex", gap: 10 }}>
-          <button className="secondary" onClick={exportCSV} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12 }}>
-            <Download size={14} /> Export CSV
+          <button className="secondary" onClick={exportCSV} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 16 }}>
+            <Download size={15} /> Export CSV
           </button>
-          <button className="secondary" onClick={exportJSON} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12 }}>
-            <Download size={14} /> Export JSON
+          <button className="secondary" onClick={exportJSON} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 16 }}>
+            <Download size={15} /> Export JSON
           </button>
         </div>
         <span className="muted">
@@ -91,12 +91,12 @@ export function Findings({ findings, onSaveFinding, projectName = "VAPT" }: Find
           placeholder="Search by title, endpoint, CWE..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          style={{ flex: 1, minWidth: 200, padding: 8, background: "#1d2021", border: "1px solid #504945", color: "#ebdbb2" }}
+          style={{ flex: 1, minWidth: 200, padding: 10, fontSize: 16, background: "#1d2021", border: "1px solid #504945", color: "#ebdbb2" }}
         />
         <select
           value={severityFilter}
           onChange={(e) => setSeverityFilter(e.target.value)}
-          style={{ padding: 8, background: "#1d2021", border: "1px solid #504945", color: "#ebdbb2" }}
+          style={{ padding: 10, fontSize: 16, background: "#1d2021", border: "1px solid #504945", color: "#ebdbb2" }}
         >
           <option value="ALL">All Severities</option>
           <option value="CRITICAL">Critical</option>
@@ -108,7 +108,7 @@ export function Findings({ findings, onSaveFinding, projectName = "VAPT" }: Find
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
-          style={{ padding: 8, background: "#1d2021", border: "1px solid #504945", color: "#ebdbb2" }}
+          style={{ padding: 10, fontSize: 16, background: "#1d2021", border: "1px solid #504945", color: "#ebdbb2" }}
         >
           <option value="ALL">All Statuses</option>
           <option value="OPEN">Open</option>
@@ -138,8 +138,8 @@ export function Findings({ findings, onSaveFinding, projectName = "VAPT" }: Find
               <span>{f.cvss_score.toFixed(1)}</span>
               <span>
                 <span style={{
-                  fontSize: 10,
-                  padding: "2px 6px",
+                  fontSize: 14,
+                  padding: "4px 8px",
                   borderRadius: 3,
                   border: `1px solid ${f.status === "REMEDIATED" ? "#b8bb26" : f.status === "IN_PROGRESS" ? "#fabd2f" : "#504945"}`,
                   color: f.status === "REMEDIATED" ? "#b8bb26" : f.status === "IN_PROGRESS" ? "#fabd2f" : "#d5c4a1"
@@ -151,9 +151,9 @@ export function Findings({ findings, onSaveFinding, projectName = "VAPT" }: Find
                 <button
                   className="secondary"
                   onClick={() => setEditingFinding(f)}
-                  style={{ padding: "4px 8px", fontSize: 11, display: "flex", alignItems: "center", gap: 4 }}
+                  style={{ padding: "6px 10px", fontSize: 15, display: "flex", alignItems: "center", gap: 4 }}
                 >
-                  <Edit3 size={12} /> Edit
+                  <Edit3 size={14} /> Edit
                 </button>
               </span>
             </div>

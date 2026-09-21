@@ -48,7 +48,7 @@ export function Overview({ projects, findings, onCreate, onViewProjects }: Overv
           {low > 0 && <div title={`Low: ${low}`} style={{ width: `${(low / totalFindings) * 100}%`, background: "#b8bb26" }} />}
         </div>
 
-        <div style={{ display: "flex", gap: 20, marginTop: 12, fontSize: 12 }}>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 20, marginTop: 12, fontSize: 16 }}>
           <span><b style={{ color: "#fb4934" }}>■</b> Critical ({critical})</span>
           <span><b style={{ color: "#fe8019" }}>■</b> High ({high})</span>
           <span><b style={{ color: "#fabd2f" }}>■</b> Medium ({medium})</span>

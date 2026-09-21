@@ -104,7 +104,7 @@ export function Surface({ surface }: SurfaceProps) {
                   x={node.x}
                   y={node.y + (node.type === "root" ? 34 : 28)}
                   fill="#ebdbb2"
-                  fontSize="11"
+                  fontSize="15"
                   textAnchor="middle"
                   fontFamily="inherit"
                 >
@@ -116,7 +116,7 @@ export function Surface({ surface }: SurfaceProps) {
         </svg>
       </div>
 
-      <div style={{ marginTop: 14, display: "flex", gap: 16, fontSize: 12, color: "#a89984" }}>
+      <div style={{ marginTop: 14, display: "flex", flexWrap: "wrap", gap: 16, fontSize: 16, color: "#a89984" }}>
         <span><b style={{ color: "#83a598" }}>●</b> Origin Root</span>
         <span><b style={{ color: "#8ec07b" }}>●</b> Target Host</span>
         <span><b style={{ color: "#fb4934" }}>●</b> Critical</span>

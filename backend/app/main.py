@@ -98,7 +98,7 @@ def on_startup():
     # Bind the running asyncio loop to ScanEventBus for thread-safe broadcasts
     try:
         loop = asyncio.get_running_loop()
-        scan_event_bus.set_event_loop(loop)
+        scan_event_bus.set_loop(loop)
         logger.info("WebSocket scan event bus bound to running event loop.")
     except RuntimeError:
         logger.warning("No running asyncio event loop detected during startup.")

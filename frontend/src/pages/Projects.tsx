@@ -128,11 +128,11 @@ export function Projects({
               </div>
 
               {/* Targets List */}
-              <div style={{ marginTop: 20, marginBottom: 20 }}>
-                <h3 style={{ fontSize: 14, color: "#ebdbb2", marginBottom: 10 }}>
+              <div style={{ marginTop: 20, marginBottom: 20, width: "100%", maxWidth: "100%", boxSizing: "border-box" }}>
+                <h3 style={{ fontSize: 16, color: "#ebdbb2", marginBottom: 10 }}>
                   Authorized Scope Targets ({targets.length})
                 </h3>
-                <div style={{ display: "grid", gap: 8 }}>
+                <div style={{ display: "grid", gap: 8, width: "100%", maxWidth: "100%" }}>
                   {targets.map((t) => (
                     <div
                       key={t.id}
@@ -140,35 +140,37 @@ export function Projects({
                         display: "flex",
                         justifyContent: "space-between",
                         alignItems: "center",
-                        padding: "8px 12px",
+                        padding: "10px 14px",
                         background: "#1d2021",
                         border: `1px solid ${t.excluded ? "#504945" : "#689d6a"}`,
                         borderRadius: 4,
                         opacity: t.excluded ? 0.6 : 1,
+                        minWidth: 0,
+                        gap: 12,
                       }}
                     >
-                      <div>
-                        <strong style={{ color: t.excluded ? "#a89984" : "#ebdbb2", fontSize: 13 }}>{t.value}</strong>
-                        <span style={{ fontSize: 10, marginLeft: 8, color: "#83a598" }}>[{t.type}]</span>
-                        {t.excluded && <span style={{ fontSize: 10, marginLeft: 8, color: "#fb4934" }}>(EXCLUDED FROM SCAN)</span>}
+                      <div style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        <strong style={{ color: t.excluded ? "#a89984" : "#ebdbb2", fontSize: 17 }}>{t.value}</strong>
+                        <span style={{ fontSize: 14, marginLeft: 8, color: "#83a598" }}>[{t.type}]</span>
+                        {t.excluded && <span style={{ fontSize: 14, marginLeft: 8, color: "#fb4934" }}>(EXCLUDED FROM SCAN)</span>}
                       </div>
-                      <div style={{ display: "flex", gap: 6 }}>
+                      <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
                         <button
                           type="button"
                           className="secondary"
                           onClick={() => onToggleTarget(t.id)}
-                          style={{ fontSize: 11, padding: "4px 8px", display: "flex", alignItems: "center", gap: 4 }}
+                          style={{ fontSize: 15, padding: "6px 10px", display: "flex", alignItems: "center", gap: 6 }}
                         >
-                          {t.excluded ? <CheckCircle size={12} color="#b8bb26" /> : <Slash size={12} color="#fabd2f" />}
+                          {t.excluded ? <CheckCircle size={14} color="#b8bb26" /> : <Slash size={14} color="#fabd2f" />}
                           {t.excluded ? "Include" : "Exclude"}
                         </button>
                         <button
                           type="button"
                           className="danger"
                           onClick={() => onDeleteTarget(t.id)}
-                          style={{ fontSize: 11, padding: "4px 8px" }}
+                          style={{ fontSize: 15, padding: "6px 10px" }}
                         >
-                          <Trash2 size={12} />
+                          <Trash2 size={14} />
                         </button>
                       </div>
                     </div>
