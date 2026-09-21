@@ -1,7 +1,16 @@
-/** Projects list and detail page with live Target management and exclusion toggle. */
-import { Bug, CheckCircle, FileText, Play, Plus, Server, Slash, Target as TargetIcon, Trash2 } from "lucide-react";
-import type { FormEvent } from "react";
+/** Projects list and detail page with live Target management, exclusion toggle, and real-time scan streaming. */
+import { Bug, CheckCircle, FileText, Gauge, Play, Plus, Radio, Server, Slash, Target as TargetIcon, Trash2, Zap } from "lucide-react";
+import { useEffect, useRef, type FormEvent } from "react";
 import type { Project, ScanState, Target } from "../types";
+
+/** Stages in the 5-step scan pipeline */
+const SCAN_STAGES = [
+  { key: "Subdomain Discovery", label: "Recon", icon: "🔍" },
+  { key: "Port Scanning", label: "Ports", icon: "🔌" },
+  { key: "HTTP Probing", label: "Probing", icon: "🌐" },
+  { key: "Vulnerability Scanning", label: "Vulns", icon: "🛡️" },
+  { key: "Finalization", label: "Done", icon: "✓" },
+];
 
 type ProjectsProps = {
   projects: Project[];
@@ -19,6 +28,9 @@ type ProjectsProps = {
   onDelete: () => void;
   scanLog: string;
   activeScan: ScanState | null;
+  liveAssetCount?: number;
+  liveFindingCount?: number;
+  scanStage?: string;
 };
 
 export function Projects({
@@ -37,7 +49,21 @@ export function Projects({
   onDelete,
   scanLog,
   activeScan,
+  liveAssetCount = 0,
+  liveFindingCount = 0,
+  scanStage = "",
 }: ProjectsProps) {
+  // Auto-scroll the scan log
+  const logRef = useRef<HTMLPreElement>(null);
+  useEffect(() => {
+    if (logRef.current) {
+      logRef.current.scrollTop = logRef.current.scrollHeight;
+    }
+  }, [scanLog]);
+
+  // Determine current stage index
+  const currentStageIdx = SCAN_STAGES.findIndex((s) => s.key === scanStage);
+
   return (
     <div className="projects-layout">
       {/* Project list sidebar */}
@@ -77,8 +103,15 @@ export function Projects({
 
               <div className="actions">
                 <button onClick={onScan} disabled={!!activeScan}>
-                  <Play size={15} />{" "}
-                  {activeScan ? "Assessment Running" : "Launch Security Scan"}
+                  {activeScan ? (
+                    <>
+                      <Radio size={15} className="pulse-icon" /> Live Assessment Running
+                    </>
+                  ) : (
+                    <>
+                      <Zap size={15} /> Launch Real-Time Scan
+                    </>
+                  )}
                 </button>
                 <button className="secondary" onClick={onAssets}>
                   <Server size={15} /> Assets
@@ -159,18 +192,58 @@ export function Projects({
                 </button>
               </form>
 
+              {/* ─── Real-Time Scan Dashboard ─── */}
               {activeScan && (
-                <div className="progress">
-                  <span>
-                    {activeScan.status} {activeScan.progress}%
-                  </span>
-                  <i>
-                    <b style={{ width: `${activeScan.progress}%` }} />
-                  </i>
+                <div className="scan-dashboard">
+                  {/* Stage progress pipeline */}
+                  <div className="scan-stages">
+                    {SCAN_STAGES.map((stage, idx) => {
+                      let stageClass = "scan-stage";
+                      if (idx < currentStageIdx) stageClass += " completed";
+                      else if (idx === currentStageIdx) stageClass += " active";
+                      return (
+                        <div key={stage.key} className={stageClass}>
+                          <span className="scan-stage-icon">{stage.icon}</span>
+                          <span className="scan-stage-label">{stage.label}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* Progress bar */}
+                  <div className="progress">
+                    <span>
+                      <Gauge size={13} style={{ marginRight: 4 }} />
+                      {activeScan.status} {activeScan.progress}%
+                      {scanStage && <span className="stage-badge">{scanStage}</span>}
+                    </span>
+                    <i>
+                      <b style={{ width: `${activeScan.progress}%` }} />
+                    </i>
+                  </div>
+
+                  {/* Live discovery counters */}
+                  {(liveAssetCount > 0 || liveFindingCount > 0) && (
+                    <div className="live-counters">
+                      <div className="live-counter">
+                        <Server size={14} color="#83a598" />
+                        <span>{liveAssetCount} asset{liveAssetCount !== 1 ? "s" : ""} discovered</span>
+                      </div>
+                      <div className="live-counter">
+                        <Bug size={14} color="#fb4934" />
+                        <span>{liveFindingCount} finding{liveFindingCount !== 1 ? "s" : ""} detected</span>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
 
-              {scanLog && <pre className="scan-log">{scanLog}</pre>}
+              {/* Scan log — always visible if there's content */}
+              {scanLog && (
+                <pre className="scan-log" ref={logRef}>
+                  {scanLog}
+                </pre>
+              )}
             </>
           ) : (
             <p className="empty">Select or create a project.</p>

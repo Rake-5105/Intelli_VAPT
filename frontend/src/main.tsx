@@ -290,6 +290,9 @@ function AppShell() {
             onDelete={() => setConfirmDelete(true)}
             scanLog={scanLog}
             activeScan={activeScan}
+            liveAssetCount={ctx.liveAssetCount}
+            liveFindingCount={ctx.liveFindingCount}
+            scanStage={ctx.scanStage}
           />
         )}
 

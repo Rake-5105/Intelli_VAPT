@@ -1,15 +1,17 @@
 """IntelliVAPT API: safe orchestration for explicitly authorized assessments.
 
 This module creates the FastAPI application, registers middleware and routers,
-and seeds demo data on startup. All business logic has been moved to dedicated
-modules under app.routes, app.auth, app.models, etc.
+seeds default administrator on startup, and provides the WebSocket endpoint for real-time
+scan streaming.
 """
 
+import asyncio
+import logging
 import os
 
 from argon2 import PasswordHasher
 from celery import Celery
-from fastapi import FastAPI
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 
 from .auth import hasher
@@ -27,19 +29,23 @@ from .models import (
     SessionLocal,
 )
 from .routes import all_routers
+from .websocket import scan_event_bus
+from .wsl_check import get_wsl_status
+
+logger = logging.getLogger("intellivapt")
 
 # ---------------------------------------------------------------------------
 # Configuration
 # ---------------------------------------------------------------------------
 
-DEMO_MODE = os.getenv("DEMO_MODE", "true").lower() == "true"
+DEMO_MODE = os.getenv("DEMO_MODE", "false").lower() == "true"
 celery_app = Celery("intellivapt", broker=os.getenv("REDIS_URL", "redis://localhost:6379/0"))
 
 # ---------------------------------------------------------------------------
 # Application factory
 # ---------------------------------------------------------------------------
 
-app = FastAPI(title="IntelliVAPT API", version="0.1.0")
+app = FastAPI(title="IntelliVAPT API", version="2.0.0")
 
 # CORS
 development_origins = "http://localhost:5173,http://127.0.0.1:5173,http://localhost:5174,http://127.0.0.1:5174"
@@ -61,32 +67,95 @@ for router in all_routers:
 
 
 # ---------------------------------------------------------------------------
-# Startup — create tables and seed demo data
+# WebSocket endpoint for real-time scan streaming
+# ---------------------------------------------------------------------------
+
+@app.websocket("/ws/scans/{scan_id}")
+async def scan_websocket(websocket: WebSocket, scan_id: str):
+    """Stream real-time scan events to connected clients.
+
+    Events sent: log, progress, status, finding, asset, stage
+    """
+    await scan_event_bus.connect(scan_id, websocket)
+    try:
+        while True:
+            # Keep the connection alive; we only send data server → client
+            # but we still read to detect disconnects and handle pings
+            await websocket.receive_text()
+    except WebSocketDisconnect:
+        scan_event_bus.disconnect(scan_id, websocket)
+    except Exception:
+        scan_event_bus.disconnect(scan_id, websocket)
+
+
+# ---------------------------------------------------------------------------
+# Startup — create tables, seed admin account, configure WebSocket event loop
 # ---------------------------------------------------------------------------
 
 @app.on_event("startup")
-def startup():
-    """Create database tables and optionally seed demo data."""
+def on_startup():
+    """Create database tables, configure WebSocket bus, and ensure administrator exists."""
+    # Bind the running asyncio loop to ScanEventBus for thread-safe broadcasts
+    try:
+        loop = asyncio.get_running_loop()
+        scan_event_bus.set_event_loop(loop)
+        logger.info("WebSocket scan event bus bound to running event loop.")
+    except RuntimeError:
+        logger.warning("No running asyncio event loop detected during startup.")
+
+    # Detect WSL environment
+    status = get_wsl_status()
+    if status.available:
+        logger.info("WSL detected: %s", status.distro)
+        installed_tools = [t for t, ok in status.tools.items() if ok]
+        missing_tools = [t for t, ok in status.tools.items() if not ok]
+        if installed_tools:
+            logger.info("  WSL tools available: %s", ", ".join(installed_tools))
+        if missing_tools:
+            logger.info("  WSL tools missing: %s (run scripts/install_wsl_tools.sh)", ", ".join(missing_tools))
+    else:
+        logger.info("WSL not available — falling back to Windows binaries in tools/bin/.")
+
+    # Create database tables
     Base.metadata.create_all(engine)
 
     db = SessionLocal()
     try:
-        if DEMO_MODE and not db.query(User).filter_by(email="demo@intellivapt.example.com").first():
-            user = User(
-                name="Demo Analyst",
-                email="demo@intellivapt.example.com",
-                password_hash=hasher.hash("DemoPassword!2026"),
-                role=Role.ADMIN,
-            )
-            db.add(user)
-            db.flush()
+        # Ensure default administrator exists
+        admin = db.query(User).filter_by(email="admin@intellivapt.local").first()
+        if not admin:
+            # Upgrade existing demo account if present, otherwise create new administrator
+            legacy_user = db.query(User).filter(
+                User.email.in_(["demo@intellivapt.example.com", "demo@intellivapt.local"])
+            ).first()
+            if legacy_user:
+                legacy_user.name = "Security Administrator"
+                legacy_user.email = "admin@intellivapt.local"
+                legacy_user.password_hash = hasher.hash("AdminSecure!2026")
+                legacy_user.role = Role.ADMIN
+                db.commit()
+                admin = legacy_user
+                logger.info("Upgraded legacy demo account to: admin@intellivapt.local")
+            else:
+                new_admin = User(
+                    name="Security Administrator",
+                    email="admin@intellivapt.local",
+                    password_hash=hasher.hash("AdminSecure!2026"),
+                    role=Role.ADMIN,
+                )
+                db.add(new_admin)
+                db.commit()
+                admin = new_admin
+                logger.info("Created default administrator: admin@intellivapt.local")
 
+        # Only seed demo project data if DEMO_MODE is explicitly enabled
+        if DEMO_MODE and not db.query(Project).filter_by(name="ACME External VAPT").first():
             project = Project(
                 name="ACME External VAPT",
                 client="ACME Corporation",
                 description="Authorized external assessment demo.",
                 status=ProjectStatus.ACTIVE,
-                owner_id=user.id,
+                owner_id=admin.id,
             )
             db.add(project)
             db.flush()
@@ -163,5 +232,6 @@ def startup():
 
 @app.get("/health")
 def health():
-    """Basic liveness probe."""
-    return {"status": "ok", "demo_mode": DEMO_MODE}
+    """Basic liveness probe with WSL status."""
+    wsl_ok = os.getenv("WSL_ENABLED", "true").lower() == "true"
+    return {"status": "ok", "demo_mode": DEMO_MODE, "wsl_enabled": wsl_ok}

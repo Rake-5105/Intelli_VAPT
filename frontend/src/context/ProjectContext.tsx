@@ -1,8 +1,9 @@
 /**
  * Project context — manages project list, selected project, and associated data.
+ * Uses WebSocket for real-time scan streaming instead of HTTP polling.
  */
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
-import { request } from "../api";
+import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from "react";
+import { createScanWebSocket, request } from "../api";
 import { useAuth } from "./AuthContext";
 import type { Asset, Finding, Project, ScanState, Surface, Target, View } from "../types";
 
@@ -19,6 +20,11 @@ type ProjectContextValue = {
   error: string;
   notice: string;
   showCreate: boolean;
+
+  /** Live counters updated via WebSocket during scans */
+  liveAssetCount: number;
+  liveFindingCount: number;
+  scanStage: string;
 
   setSelected: (p: Project | null) => void;
   setView: (v: View) => void;
@@ -48,6 +54,14 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [showCreate, setShowCreate] = useState(false);
+
+  // Real-time counters from WebSocket
+  const [liveAssetCount, setLiveAssetCount] = useState(0);
+  const [liveFindingCount, setLiveFindingCount] = useState(0);
+  const [scanStage, setScanStage] = useState("");
+
+  // WebSocket close handle
+  const wsRef = useRef<{ close: () => void } | null>(null);
 
   // Load project list
   async function loadProjects() {
@@ -89,35 +103,58 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
     loadProjectData();
   }, [selected?.id, token]);
 
-  // Poll active scan progress
+  // -------------------------------------------------------------------------
+  // WebSocket-based real-time scan streaming
+  // -------------------------------------------------------------------------
   useEffect(() => {
-    if (!activeScan) return;
+    if (!activeScan) {
+      // Clean up any existing WebSocket
+      wsRef.current?.close();
+      wsRef.current = null;
+      return;
+    }
 
-    const poll = async () => {
+    // Reset live counters
+    setLiveAssetCount(0);
+    setLiveFindingCount(0);
+    setScanStage("");
+    setScanLog("");
+
+    // Also do an initial HTTP fetch to get any logs that were written
+    // before the WebSocket connected
+    (async () => {
       try {
-        const scan = await request(`/api/scans/${activeScan.id}`, token);
         const log = await request(`/api/scans/${activeScan.id}/logs`, token);
-        setActiveScan(scan);
-        setScanLog(log.log);
+        if (log.log) setScanLog(log.log);
+      } catch {
+        // Ignore — WS will deliver logs going forward
+      }
+    })();
 
-        if (
-          scan.status === "COMPLETED" ||
-          scan.status === "CANCELLED" ||
-          scan.status === "FAILED"
-        ) {
-          if (scan.status === "COMPLETED") {
+    const ws = createScanWebSocket(activeScan.id, {
+      onLog: (message) => {
+        setScanLog((prev) => prev + message + "\n");
+      },
+      onProgress: (progress) => {
+        setActiveScan((prev) => prev ? { ...prev, progress } : prev);
+      },
+      onStatus: async (status) => {
+        setActiveScan((prev) => prev ? { ...prev, status } : prev);
+
+        if (status === "COMPLETED" || status === "CANCELLED" || status === "FAILED") {
+          if (status === "COMPLETED") {
             setNotice("Assessment completed. Generating and downloading final report...");
             try {
-              const currentProjId = selected?.id || scan.project_id;
+              const currentProjId = selected?.id;
               if (currentProjId) {
-                // Auto-generate and download report
                 const report = await request(`/api/projects/${currentProjId}/reports`, token, {
                   method: "POST",
                   body: "{}",
                 });
-                const response = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:8000"}/api/reports/${report.id}/download`, {
-                  headers: { Authorization: `Bearer ${token}` },
-                });
+                const response = await fetch(
+                  `${import.meta.env.VITE_API_URL || "http://localhost:8000"}/api/reports/${report.id}/download`,
+                  { headers: { Authorization: `Bearer ${token}` } }
+                );
                 if (response.ok) {
                   const blob = await response.blob();
                   const url = URL.createObjectURL(blob);
@@ -134,20 +171,34 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
               console.error("Auto report generation failed:", err);
             }
           } else {
-            setNotice(`Scan ${scan.status.toLowerCase()}.`);
+            setNotice(`Scan ${status.toLowerCase()}.`);
           }
-          setActiveScan(null);
-          await loadProjects();
-        }
-      } catch (e) {
-        setError(e instanceof Error ? e.message : "Could not update simulation");
-        setActiveScan(null);
-      }
-    };
 
-    poll();
-    const timer = window.setInterval(poll, 1000);
-    return () => window.clearInterval(timer);
+          // Close WebSocket and refresh data
+          wsRef.current?.close();
+          wsRef.current = null;
+          setActiveScan(null);
+          setScanStage("");
+          await loadProjects();
+          await loadProjectData();
+        }
+      },
+      onFinding: () => {
+        setLiveFindingCount((c) => c + 1);
+      },
+      onAsset: () => {
+        setLiveAssetCount((c) => c + 1);
+      },
+      onStage: (stage) => {
+        setScanStage(stage);
+      },
+    });
+
+    wsRef.current = ws;
+
+    return () => {
+      ws.close();
+    };
   }, [activeScan?.id]);
 
   return (
@@ -165,6 +216,9 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
         error,
         notice,
         showCreate,
+        liveAssetCount,
+        liveFindingCount,
+        scanStage,
         setSelected,
         setView,
         setError,

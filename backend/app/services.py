@@ -1,4 +1,9 @@
-"""Safe scanner and reporting primitives used by the API and worker."""
+"""Safe scanner and reporting primitives used by the API and worker.
+
+Provides both Windows-native and WSL execution paths. The scanner
+module (scanner.py) calls into these functions; WSL-specific helpers
+live in wsl_check.py.
+"""
 from __future__ import annotations
 import hashlib
 import os
@@ -8,6 +13,8 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 from fastapi import HTTPException
+
+from .wsl_check import check_wsl_available, check_wsl_tool, get_wsl_status
 
 TOOL_ENV = {
     "nmap": "NMAP_PATH",
@@ -41,17 +48,43 @@ def get_tool_binary(tool: str) -> str | None:
 
 
 def tool_status():
+    """Return status of all configured tools, including WSL availability."""
+    wsl_ok = check_wsl_available()
     result = []
     for tool, env in TOOL_ENV.items():
         configured = os.getenv(env, tool)
-        binary = get_tool_binary(tool)
+        windows_binary = get_tool_binary(tool)
+
+        # Check WSL
+        wsl_installed = False
+        wsl_path = ""
+        if wsl_ok:
+            wsl_installed, wsl_path = check_wsl_tool(tool)
+
+        # Determine execution mode
+        if wsl_installed:
+            exec_mode = "wsl"
+            effective_path = wsl_path
+            installed = True
+        elif windows_binary:
+            exec_mode = "windows"
+            effective_path = windows_binary
+            installed = True
+        else:
+            exec_mode = "unavailable"
+            effective_path = None
+            installed = False
+
         result.append({
             "tool": tool,
             "configured_path": configured,
-            "installed": bool(binary),
-            "path": binary,
+            "installed": installed,
+            "path": effective_path,
+            "execution_mode": exec_mode,
+            "wsl_available": wsl_ok,
         })
     return result
+
 
 def safe_run(tool: str, arguments: list[str], timeout: int = 300) -> subprocess.CompletedProcess[str]:
     """Execute only configured tools using argument arrays, never a shell string."""

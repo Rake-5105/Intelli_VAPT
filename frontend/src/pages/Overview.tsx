@@ -68,7 +68,7 @@ export function Overview({ projects, findings, onCreate, onViewProjects }: Overv
         </div>
         <p className="empty">
           Create a project, define its explicitly authorized scope, then use the
-          project actions to run a safe demo scan.
+          project actions to launch an automated real-time assessment.
         </p>
         <button className="secondary" onClick={onViewProjects}>
           Open projects

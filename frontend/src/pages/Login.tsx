@@ -24,7 +24,8 @@ export function Login({ onSubmit, error }: LoginProps) {
             <input
               name="email"
               type="email"
-              defaultValue="demo@intellivapt.example.com"
+              placeholder="admin@intellivapt.local"
+              autoComplete="email"
               required
             />
           </label>
@@ -33,7 +34,8 @@ export function Login({ onSubmit, error }: LoginProps) {
             <input
               name="password"
               type="password"
-              defaultValue="DemoPassword!2026"
+              placeholder="••••••••••••"
+              autoComplete="current-password"
               required
             />
           </label>

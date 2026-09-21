@@ -11,7 +11,7 @@ from ..schemas import ScanDetailOut, ScanIn, ScanListOut, ScanLogOut, ScanOut
 from ..simulation import start_simulation_thread
 from ..scanner import start_live_scan_thread
 
-DEMO_MODE = os.getenv("DEMO_MODE", "true").lower() == "true"
+DEMO_MODE = os.getenv("DEMO_MODE", "false").lower() == "true"
 
 router = APIRouter(tags=["Scans"])
 

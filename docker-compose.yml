@@ -1,4 +1,13 @@
+# =============================================================================
+# IntelliVAPT — Docker Compose (Real-Time VAPT Platform)
+#
+# In Docker, security tools run NATIVELY inside the backend container
+# (no WSL needed). The backend Dockerfile installs nmap, subfinder,
+# httpx, nuclei, and nikto directly.
+# =============================================================================
+
 services:
+  # ─── PostgreSQL Database ─────────────────────────────────────────────
   postgres:
     image: postgres:16-alpine
     environment:
@@ -12,6 +21,8 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+
+  # ─── Redis (Celery Broker) ───────────────────────────────────────────
   redis:
     image: redis:7-alpine
     ports: ["6379:6379"]
@@ -20,29 +31,45 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+
+  # ─── Backend API + Scanner Engine ────────────────────────────────────
   backend:
     build: ./backend
     env_file: .env
-    volumes: [./storage:/app/storage]
+    environment:
+      - WSL_ENABLED=false
+      - DEMO_MODE=false
+    volumes:
+      - ./storage:/app/storage
     ports: ["8000:8000"]
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
+
+  # ─── Celery Worker ───────────────────────────────────────────────────
   worker:
     build: ./backend
     command: celery -A app.worker.celery_app worker --loglevel=info
     env_file: .env
-    volumes: [./storage:/app/storage]
+    environment:
+      - WSL_ENABLED=false
+    volumes:
+      - ./storage:/app/storage
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
+
+  # ─── Frontend Dashboard ─────────────────────────────────────────────
   frontend:
     build: ./frontend
     ports: ["5173:5173"]
+    environment:
+      - VITE_API_URL=http://localhost:8000
     depends_on: [backend]
+
 volumes:
   postgres-data:

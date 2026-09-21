@@ -1,6 +1,7 @@
-/** API client with typed request helper for IntelliVAPT backend. */
+/** API client with typed request helper and WebSocket support for IntelliVAPT backend. */
 
 const API = import.meta.env.VITE_API_URL || "http://localhost:8000";
+const WS_API = API.replace(/^http/, "ws");
 
 /**
  * Make an authenticated API request.
@@ -67,4 +68,98 @@ export async function downloadReport(
   link.download = `${reportName}.pdf`;
   link.click();
   URL.revokeObjectURL(url);
+}
+
+// ---------------------------------------------------------------------------
+// WebSocket helpers for real-time scan streaming
+// ---------------------------------------------------------------------------
+
+export type ScanWSEvent = {
+  event: "log" | "progress" | "status" | "finding" | "asset" | "stage";
+  data: any;
+};
+
+export type ScanWSCallbacks = {
+  onLog?: (message: string) => void;
+  onProgress?: (progress: number, stage?: string) => void;
+  onStatus?: (status: string) => void;
+  onFinding?: (finding: any) => void;
+  onAsset?: (asset: any) => void;
+  onStage?: (stage: string, step: number, total: number) => void;
+  onClose?: () => void;
+  onError?: (error: Event) => void;
+};
+
+/**
+ * Create a WebSocket connection for real-time scan streaming.
+ * Returns a close() function to tear down the connection.
+ */
+export function createScanWebSocket(
+  scanId: string,
+  callbacks: ScanWSCallbacks
+): { close: () => void } {
+  const url = `${WS_API}/ws/scans/${scanId}`;
+  let ws: WebSocket | null = new WebSocket(url);
+  let reconnectTimer: number | null = null;
+  let closed = false;
+
+  function connect() {
+    if (closed) return;
+    ws = new WebSocket(url);
+
+    ws.onopen = () => {
+      console.log(`[WS] Connected to scan ${scanId}`);
+    };
+
+    ws.onmessage = (evt) => {
+      try {
+        const event: ScanWSEvent = JSON.parse(evt.data);
+        switch (event.event) {
+          case "log":
+            callbacks.onLog?.(event.data.message);
+            break;
+          case "progress":
+            callbacks.onProgress?.(event.data.progress, event.data.stage);
+            break;
+          case "status":
+            callbacks.onStatus?.(event.data.status);
+            break;
+          case "finding":
+            callbacks.onFinding?.(event.data);
+            break;
+          case "asset":
+            callbacks.onAsset?.(event.data);
+            break;
+          case "stage":
+            callbacks.onStage?.(event.data.stage, event.data.step, event.data.total);
+            break;
+        }
+      } catch (err) {
+        console.warn("[WS] Failed to parse event:", err);
+      }
+    };
+
+    ws.onclose = () => {
+      if (!closed) {
+        // Auto-reconnect after 2 seconds
+        reconnectTimer = window.setTimeout(connect, 2000);
+      }
+      callbacks.onClose?.();
+    };
+
+    ws.onerror = (err) => {
+      callbacks.onError?.(err);
+    };
+  }
+
+  connect();
+
+  return {
+    close: () => {
+      closed = true;
+      if (reconnectTimer) window.clearTimeout(reconnectTimer);
+      ws?.close();
+      ws = null;
+    },
+  };
 }

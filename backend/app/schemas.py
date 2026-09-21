@@ -209,6 +209,8 @@ class ToolStatusOut(BaseModel):
     configured_path: str
     installed: bool
     path: str | None
+    execution_mode: str = "unavailable"  # "wsl", "windows", or "unavailable"
+    wsl_available: bool = False
 
 
 class HealthOut(BaseModel):
