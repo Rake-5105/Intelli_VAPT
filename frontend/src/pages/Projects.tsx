@@ -129,7 +129,7 @@ export function Projects({
 
               {/* Targets List */}
               <div style={{ marginTop: 20, marginBottom: 20, width: "100%", maxWidth: "100%", boxSizing: "border-box" }}>
-                <h3 style={{ fontSize: 16, color: "#ebdbb2", marginBottom: 10 }}>
+                <h3 style={{ fontSize: 16, color: "var(--text-primary)", marginBottom: 10 }}>
                   Authorized Scope Targets ({targets.length})
                 </h3>
                 <div style={{ display: "grid", gap: 8, width: "100%", maxWidth: "100%" }}>
@@ -141,8 +141,8 @@ export function Projects({
                         justifyContent: "space-between",
                         alignItems: "center",
                         padding: "10px 14px",
-                        background: "#1d2021",
-                        border: `1px solid ${t.excluded ? "#504945" : "#689d6a"}`,
+                        background: "var(--bg-tertiary)",
+                        border: `1px solid ${t.excluded ? "var(--border)" : "var(--success-border)"}`,
                         borderRadius: 4,
                         opacity: t.excluded ? 0.6 : 1,
                         minWidth: 0,
@@ -150,7 +150,7 @@ export function Projects({
                       }}
                     >
                       <div style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                        <strong style={{ color: t.excluded ? "#a89984" : "#ebdbb2", fontSize: 17 }}>{t.value}</strong>
+                        <strong style={{ color: t.excluded ? "var(--text-muted)" : "var(--text-primary)", fontSize: 17 }}>{t.value}</strong>
                         <span style={{ fontSize: 14, marginLeft: 8, color: "#83a598" }}>[{t.type}]</span>
                         {t.excluded && <span style={{ fontSize: 14, marginLeft: 8, color: "#fb4934" }}>(EXCLUDED FROM SCAN)</span>}
                       </div>

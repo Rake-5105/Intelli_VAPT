@@ -6,6 +6,18 @@
     <meta name="description" content="IntelliVAPT — Authorized-use web vulnerability assessment and attack-surface intelligence platform." />
     <title>IntelliVAPT — Security Assessment Platform</title>
     <link rel="icon" href="/favicon.svg" />
+    <script>
+      (function() {
+        try {
+          var t = localStorage.getItem('intellivapt-theme');
+          if (t === 'light') {
+            document.documentElement.setAttribute('data-theme', 'light');
+          } else {
+            document.documentElement.setAttribute('data-theme', 'dark');
+          }
+        } catch(e) {}
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

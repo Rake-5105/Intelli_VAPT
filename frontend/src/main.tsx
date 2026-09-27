@@ -1,9 +1,9 @@
 /**
  * IntelliVAPT — Application entry point.
  */
-import { FormEvent, useState } from "react";
+import { FormEvent, useState, useEffect } from "react";
 import { createRoot } from "react-dom/client";
-import { Activity, FolderKanban, Radar, ShieldCheck } from "lucide-react";
+import { Activity, FolderKanban, Radar, ShieldCheck, Sun, Moon } from "lucide-react";
 
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { ProjectProvider, useProject } from "./context/ProjectContext";
@@ -52,6 +52,33 @@ function AppShell() {
   } = ctx;
 
   const [confirmDelete, setConfirmDelete] = useState(false);
+
+  // Persistent Theme State (Dark / Light)
+  const [theme, setTheme] = useState<"dark" | "light">(() => {
+    try {
+      const saved = localStorage.getItem("intellivapt-theme");
+      return saved === "light" ? "light" : "dark";
+    } catch {
+      return "dark";
+    }
+  });
+
+  useEffect(() => {
+    document.documentElement.setAttribute("data-theme", theme);
+    document.body.setAttribute("data-theme", theme);
+    if (theme === "light") {
+      document.body.classList.add("light-theme");
+    } else {
+      document.body.classList.remove("light-theme");
+    }
+    try {
+      localStorage.setItem("intellivapt-theme", theme);
+    } catch {}
+  }, [theme]);
+
+  const toggleTheme = () => {
+    setTheme((prev) => (prev === "dark" ? "light" : "dark"));
+  };
 
   async function handleLogin(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -259,11 +286,22 @@ function AppShell() {
             onClick={() => go("surface")}
           />
         </nav>
-        <footer>
-          INTELLIVAPT SUITE
-          <br />
-          <small>Automated Security Assessment</small>
-        </footer>
+        <div className="sidebar-bottom">
+          <div className="sidebar-identity">
+            <div className="user-badge">
+              <span className="user-name">{user?.name || "Security Administrator"}</span>
+              <span className="role-pill">{user?.role || "ADMIN"}</span>
+            </div>
+            <button className="logout" onClick={logout} title="Logout">
+              Logout
+            </button>
+          </div>
+          <footer>
+            INTELLIVAPT SUITE
+            <br />
+            <small>Automated Security Assessment</small>
+          </footer>
+        </div>
       </aside>
 
       <main>
@@ -279,13 +317,24 @@ function AppShell() {
               <h1>{activeTitle[view]}</h1>
             </div>
           </div>
-          <div className="identity">
-            <div className="user-badge">
-              <span>{user?.name || "Analyst"}</span>
-              <span className="role-pill">{user?.role || "SECURITY_ANALYST"}</span>
-            </div>
-            <button className="logout" onClick={logout}>
-              Logout
+          <div className="header-right">
+            <button
+              className="theme-toggle-btn"
+              onClick={toggleTheme}
+              title={`Switch to ${theme === "dark" ? "Light" : "Dark"} Mode`}
+              aria-label="Toggle Theme"
+            >
+              {theme === "dark" ? (
+                <>
+                  <Sun size={16} className="theme-icon sun" />
+                  <span>Light Mode</span>
+                </>
+              ) : (
+                <>
+                  <Moon size={16} className="theme-icon moon" />
+                  <span>Dark Mode</span>
+                </>
+              )}
             </button>
           </div>
         </header>

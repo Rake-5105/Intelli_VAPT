@@ -49,8 +49,8 @@ export function FindingModal({ finding, onClose, onSave }: FindingModalProps) {
           </button>
         </div>
 
-        <div style={{ display: "grid", gap: 10, fontSize: 16, color: "#d5c4a1", background: "#1d2021", padding: 14, borderRadius: 4 }}>
-          <div><strong>Endpoint:</strong> <span style={{ color: "#83a598" }}>{finding.endpoint}</span></div>
+        <div style={{ display: "grid", gap: 10, fontSize: 16, color: "var(--text-secondary)", background: "var(--bg-primary)", border: "1px solid var(--border)", padding: 14, borderRadius: 4 }}>
+          <div><strong>Endpoint:</strong> <span style={{ color: "var(--info)" }}>{finding.endpoint}</span></div>
           {finding.cwe && <div><strong>CWE:</strong> {finding.cwe}</div>}
           {finding.cve && <div><strong>CVE:</strong> {finding.cve}</div>}
           <div><strong>Scanner Source:</strong> {finding.scanner}</div>
@@ -62,7 +62,7 @@ export function FindingModal({ finding, onClose, onSave }: FindingModalProps) {
             <select
               value={status}
               onChange={(e) => setStatus(e.target.value)}
-              style={{ padding: 10, fontSize: 16, background: "#1d2021", border: "1px solid #504945", color: "#ebdbb2" }}
+              style={{ padding: 10, fontSize: 16, background: "var(--bg-secondary)", border: "1px solid var(--border)", color: "var(--text-primary)" }}
             >
               <option value="OPEN">OPEN (Unaddressed)</option>
               <option value="IN_PROGRESS">IN_PROGRESS (Fix in development)</option>
@@ -79,7 +79,7 @@ export function FindingModal({ finding, onClose, onSave }: FindingModalProps) {
               value={remediation}
               onChange={(e) => setRemediation(e.target.value)}
               placeholder="Document the code fix, patch version, or developer instructions..."
-              style={{ padding: 10, fontSize: 16, background: "#1d2021", border: "1px solid #504945", color: "#ebdbb2" }}
+              style={{ padding: 10, fontSize: 16, background: "var(--bg-secondary)", border: "1px solid var(--border)", color: "var(--text-primary)" }}
             />
           </label>
 

@@ -91,12 +91,12 @@ export function Findings({ findings, onSaveFinding, projectName = "VAPT" }: Find
           placeholder="Search by title, endpoint, CWE..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          style={{ flex: 1, minWidth: 200, padding: 10, fontSize: 16, background: "#1d2021", border: "1px solid #504945", color: "#ebdbb2" }}
+          style={{ flex: 1, minWidth: 200, padding: 10, fontSize: 16, background: "var(--bg-secondary)", border: "1px solid var(--border)", color: "var(--text-primary)" }}
         />
         <select
           value={severityFilter}
           onChange={(e) => setSeverityFilter(e.target.value)}
-          style={{ padding: 10, fontSize: 16, background: "#1d2021", border: "1px solid #504945", color: "#ebdbb2" }}
+          style={{ padding: 10, fontSize: 16, background: "var(--bg-secondary)", border: "1px solid var(--border)", color: "var(--text-primary)" }}
         >
           <option value="ALL">All Severities</option>
           <option value="CRITICAL">Critical</option>
@@ -108,7 +108,7 @@ export function Findings({ findings, onSaveFinding, projectName = "VAPT" }: Find
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
-          style={{ padding: 10, fontSize: 16, background: "#1d2021", border: "1px solid #504945", color: "#ebdbb2" }}
+          style={{ padding: 10, fontSize: 16, background: "var(--bg-secondary)", border: "1px solid var(--border)", color: "var(--text-primary)" }}
         >
           <option value="ALL">All Statuses</option>
           <option value="OPEN">Open</option>

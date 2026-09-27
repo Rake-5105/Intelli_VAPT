@@ -41,7 +41,7 @@ export function Overview({ projects, findings, onCreate, onViewProjects }: Overv
         <p className="eyebrow">RISK POSTURE</p>
         <h2 style={{ margin: "6px 0 14px" }}>Vulnerability Severity Distribution</h2>
         
-        <div style={{ height: 18, display: "flex", borderRadius: 4, overflow: "hidden", background: "#1d2021", border: "1px solid #504945" }}>
+        <div style={{ height: 18, display: "flex", borderRadius: 4, overflow: "hidden", background: "var(--bg-primary)", border: "1px solid var(--border)" }}>
           {critical > 0 && <div title={`Critical: ${critical}`} style={{ width: `${(critical / totalFindings) * 100}%`, background: "#fb4934" }} />}
           {high > 0 && <div title={`High: ${high}`} style={{ width: `${(high / totalFindings) * 100}%`, background: "#fe8019" }} />}
           {medium > 0 && <div title={`Medium: ${medium}`} style={{ width: `${(medium / totalFindings) * 100}%`, background: "#fabd2f" }} />}

@@ -39,9 +39,9 @@ export function ToastProvider({ children }: { children: ReactNode }) {
             key={t.id}
             className={`toast toast-${t.type}`}
             style={{
-              background: "#282828",
-              border: `1px solid ${t.type === "error" ? "#fb4934" : t.type === "success" ? "#b8bb26" : "#83a598"}`,
-              color: "#ebdbb2",
+              background: "var(--bg-secondary)",
+              border: `1px solid ${t.type === "error" ? "var(--error)" : t.type === "success" ? "var(--success)" : "var(--info)"}`,
+              color: "var(--text-primary)",
               padding: "14px 20px",
               fontSize: "16px",
               borderRadius: "4px",
