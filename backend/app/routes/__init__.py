@@ -10,6 +10,7 @@ from .evidence import router as evidence_router
 from .remediation import router as remediation_router
 from .reports import router as reports_router
 from .tools import router as tools_router
+from .audit import router as audit_router
 
 all_routers = [
     auth_router,
@@ -22,4 +23,5 @@ all_routers = [
     remediation_router,
     reports_router,
     tools_router,
+    audit_router,
 ]

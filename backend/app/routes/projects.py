@@ -1,36 +1,15 @@
-"""Project management routes."""
+"""Project management routes with object-level authorization and security auditing."""
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 
-from ..auth import current_user, require
-from ..models import AuditLog, Project, Role, User, get_db
+from ..audit import log_security_event
+from ..auth import current_user, require, verify_project_access
+from ..models import Project, Role, User, get_db
 from ..schemas import ProjectIn, ProjectOut
 from ..serializers import serialize_project
 
 router = APIRouter(prefix="/api/projects", tags=["Projects"])
-
-
-def log_action(
-    db: Session,
-    user: User,
-    action: str,
-    resource_type: str,
-    resource_id: str,
-    detail: str = "",
-    request: Request | None = None,
-):
-    ip = request.client.host if request and request.client else ""
-    log_entry = AuditLog(
-        user_id=user.id,
-        user_email=user.email,
-        action=action,
-        resource_type=resource_type,
-        resource_id=resource_id,
-        detail=detail,
-        ip_address=ip,
-    )
-    db.add(log_entry)
 
 
 @router.get("", response_model=list[ProjectOut])
@@ -53,19 +32,24 @@ def create_project(
     db.add(p)
     db.commit()
     db.refresh(p)
-    log_action(db, user, "CREATE_PROJECT", "project", p.id, f"Created project '{p.name}'", request)
-    db.commit()
+
+    log_security_event(
+        db,
+        action="CREATE_PROJECT",
+        resource_type="project",
+        resource_id=p.id,
+        detail=f"Created assessment project '{p.name}' for client '{p.client}'",
+        user=user,
+        request=request,
+    )
     return serialize_project(p)
 
 
 @router.get("/{project_id}", response_model=ProjectOut)
 def get_project(project_id: str, db: Session = Depends(get_db), user: User = Depends(current_user)):
-    """Retrieve a single project by ID with access authorization check."""
+    """Retrieve a single project by ID with object-level authorization."""
     p = db.get(Project, project_id)
-    if not p:
-        raise HTTPException(404, "Project not found")
-    if user.role != Role.ADMIN and p.owner_id != user.id:
-        raise HTTPException(403, "Access to this project is forbidden")
+    verify_project_access(p, user, "view")
     return serialize_project(p)
 
 
@@ -76,13 +60,18 @@ def delete_project(
     db: Session = Depends(get_db),
     user: User = Depends(require(Role.ADMIN, Role.SECURITY_ANALYST)),
 ):
-    """Delete a project and all associated records."""
+    """Delete a project and all associated records with authorization check."""
     p = db.get(Project, project_id)
-    if not p:
-        raise HTTPException(404, "Project not found")
-    if user.role != Role.ADMIN and p.owner_id != user.id:
-        raise HTTPException(403, "Cannot delete a project you do not own")
-    log_action(db, user, "DELETE_PROJECT", "project", p.id, f"Deleted project '{p.name}'", request)
+    verify_project_access(p, user, "delete")
+
+    log_security_event(
+        db,
+        action="DELETE_PROJECT",
+        resource_type="project",
+        resource_id=p.id,
+        detail=f"Permanently removed project '{p.name}' and all associated telemetry",
+        user=user,
+        request=request,
+    )
     db.delete(p)
     db.commit()
-

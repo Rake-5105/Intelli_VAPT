@@ -69,6 +69,18 @@ export type Surface = {
   edges: GraphEdge[];
 };
 
+export type AuditLog = {
+  id: string;
+  user_id: string | null;
+  user_email: string;
+  action: string;
+  resource_type: string;
+  resource_id: string;
+  detail: string;
+  ip_address: string;
+  created_at: string;
+};
+
 export type View =
   | "overview"
   | "projects"
@@ -76,4 +88,6 @@ export type View =
   | "assets"
   | "findings"
   | "remediation"
-  | "reports";
+  | "reports"
+  | "audit";
+

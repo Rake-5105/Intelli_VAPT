@@ -3,7 +3,7 @@
  */
 import { FormEvent, useState, useEffect } from "react";
 import { createRoot } from "react-dom/client";
-import { Activity, FolderKanban, Radar, ShieldCheck, Sun, Moon } from "lucide-react";
+import { Activity, FolderKanban, Radar, ShieldCheck, Sun, Moon, ScrollText, KeyRound, LogOut, User as UserIcon } from "lucide-react";
 
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { ProjectProvider, useProject } from "./context/ProjectContext";
@@ -14,6 +14,7 @@ import { request, downloadReport } from "./api";
 
 import { Nav } from "./components/Nav";
 import { CreateProjectModal } from "./components/CreateProjectModal";
+import { ChangePasswordModal } from "./components/ChangePasswordModal";
 
 import { Login } from "./pages/Login";
 import { Overview } from "./pages/Overview";
@@ -23,6 +24,7 @@ import { Findings } from "./pages/Findings";
 import { Surface } from "./pages/Surface";
 import { Remediation } from "./pages/Remediation";
 import { Reports } from "./pages/Reports";
+import { AuditLogs } from "./pages/AuditLogs";
 
 import type { View } from "./types";
 import "./styles.css";
@@ -52,6 +54,7 @@ function AppShell() {
   } = ctx;
 
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [showChangePassword, setShowChangePassword] = useState(false);
 
   // Persistent Theme State (Dark / Light)
   const [theme, setTheme] = useState<"dark" | "light">(() => {
@@ -258,6 +261,7 @@ function AppShell() {
     findings: "Vulnerabilities",
     remediation: "Remediation",
     reports: "Reports",
+    audit: "Security audit trail",
   };
 
   return (
@@ -285,16 +289,42 @@ function AppShell() {
             active={view === "surface"}
             onClick={() => go("surface")}
           />
+          <Nav
+            icon={<ScrollText />}
+            label="Audit Trail"
+            active={view === "audit"}
+            onClick={() => go("audit")}
+          />
         </nav>
         <div className="sidebar-bottom">
           <div className="sidebar-identity">
-            <div className="user-badge">
-              <span className="user-name">{user?.name || "Security Administrator"}</span>
-              <span className="role-pill">{user?.role || "ADMIN"}</span>
+            <div className="user-header">
+              <div className="user-avatar" title={user?.name || "Security Administrator"}>
+                <UserIcon size={16} />
+              </div>
+              <div className="user-badge">
+                <span className="user-name">{user?.name || "Security Administrator"}</span>
+                <span className="role-pill">{user?.role || "ADMIN"}</span>
+              </div>
             </div>
-            <button className="logout" onClick={logout} title="Logout">
-              Logout
-            </button>
+            <div className="sidebar-actions">
+              <button
+                type="button"
+                className="action-btn"
+                onClick={() => setShowChangePassword(true)}
+                title="Change Password"
+              >
+                <KeyRound size={13} /> Password
+              </button>
+              <button
+                type="button"
+                className="logout-btn"
+                onClick={logout}
+                title="Logout"
+              >
+                <LogOut size={13} /> Logout
+              </button>
+            </div>
           </div>
           <footer>
             INTELLIVAPT SUITE
@@ -391,8 +421,18 @@ function AppShell() {
 
         {view === "reports" && (
           <Reports
+            selected={selected}
+            projects={projects}
+            token={token}
+            onSelectProject={(p) => setSelected(p)}
             onGenerate={generateReport}
           />
+        )}
+
+        {view === "audit" && <AuditLogs token={token} />}
+
+        {showChangePassword && (
+          <ChangePasswordModal onClose={() => setShowChangePassword(false)} />
         )}
 
         {showCreate && (

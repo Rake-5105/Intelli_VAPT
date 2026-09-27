@@ -65,12 +65,58 @@ export async function registerRequest(name: string, email: string, password: str
 }
 
 /**
+ * Perform a server-side logout request to revoke the JWT token.
+ */
+export async function logoutRequest(token: string): Promise<void> {
+  if (!token) return;
+  try {
+    await fetch(`${API}/api/auth/logout`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+  } catch {
+    // Graceful degradation if backend is unreachable
+  }
+}
+
+/**
+ * Perform a password change request.
+ */
+export async function changePasswordRequest(
+  currentPassword: string,
+  newPassword: string,
+  token: string
+) {
+  const response = await fetch(`${API}/api/auth/change-password`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({
+      current_password: currentPassword,
+      new_password: newPassword,
+    }),
+  });
+
+  if (!response.ok) {
+    const body = await response.json().catch(() => ({ detail: "Password update failed" }));
+    throw new Error(body.detail || "Password update failed");
+  }
+
+  return response.json();
+}
+
+/**
  * Download a report blob and trigger a browser download.
  */
 export async function downloadReport(
   reportId: string,
   reportName: string,
-  token: string
+  token: string,
+  format: string = "pdf"
 ): Promise<void> {
   const response = await fetch(`${API}/api/reports/${reportId}/download`, {
     headers: { Authorization: `Bearer ${token}` },
@@ -80,10 +126,16 @@ export async function downloadReport(
     throw new Error("Report download failed");
   }
 
+  const ext = format.toLowerCase().replace(/^\./, "");
+  let filename = reportName;
+  if (!filename.toLowerCase().endsWith(`.${ext}`)) {
+    filename = `${filename}.${ext}`;
+  }
+
   const url = URL.createObjectURL(await response.blob());
   const link = document.createElement("a");
   link.href = url;
-  link.download = `${reportName}.pdf`;
+  link.download = filename;
   link.click();
   URL.revokeObjectURL(url);
 }

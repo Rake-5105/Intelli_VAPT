@@ -1,9 +1,9 @@
 /**
- * Authentication context — manages token, user state, login, register, and logout.
+ * Authentication context — manages token, user state, login, register, password changes, and logout.
  * On mount, validates any stored token via /api/auth/me. If invalid, clears it.
  */
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
-import { loginRequest, registerRequest, request } from "../api";
+import { changePasswordRequest, loginRequest, logoutRequest, registerRequest, request } from "../api";
 import type { User } from "../types";
 
 type AuthContextValue = {
@@ -12,7 +12,8 @@ type AuthContextValue = {
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
   register: (name: string, email: string, password: string) => Promise<void>;
-  logout: () => void;
+  changePassword: (currentPassword: string, newPassword: string) => Promise<void>;
+  logout: () => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -58,14 +59,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setToken(data.access_token);
   }
 
-  function logout() {
+  async function changePassword(currentPassword: string, newPassword: string) {
+    if (!token) throw new Error("Not authenticated");
+    const data = await changePasswordRequest(currentPassword, newPassword, token);
+    localStorage.setItem("iv_token", data.access_token);
+    setUser(data.user);
+    setToken(data.access_token);
+  }
+
+  async function logout() {
+    const currentToken = token;
+    // Clear client state immediately
     localStorage.removeItem("iv_token");
     setToken("");
     setUser(null);
+
+    // Revoke session server-side
+    if (currentToken) {
+      await logoutRequest(currentToken);
+    }
   }
 
   return (
-    <AuthContext.Provider value={{ token, user, loading, login, register, logout }}>
+    <AuthContext.Provider value={{ token, user, loading, login, register, changePassword, logout }}>
       {children}
     </AuthContext.Provider>
   );

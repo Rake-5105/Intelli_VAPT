@@ -11,13 +11,28 @@ from pydantic import BaseModel, EmailStr, Field
 
 class Register(BaseModel):
     name: str = Field(min_length=2, max_length=120)
-    email: str = Field(min_length=3, max_length=255)
+    email: str = Field(
+        min_length=5,
+        max_length=254,
+        pattern=r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)+$",
+        description="RFC 5322 compliant email address",
+    )
     password: str = Field(min_length=12, max_length=128)
 
 
 class Login(BaseModel):
-    email: str = Field(min_length=3, max_length=255)
-    password: str
+    email: str = Field(
+        min_length=5,
+        max_length=254,
+        pattern=r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)+$",
+        description="RFC 5322 compliant email address",
+    )
+    password: str = Field(min_length=1, max_length=128)
+
+
+class ChangePassword(BaseModel):
+    current_password: str = Field(min_length=1, max_length=128)
+    new_password: str = Field(min_length=12, max_length=128)
 
 
 class ProjectIn(BaseModel):
@@ -216,3 +231,15 @@ class ToolStatusOut(BaseModel):
 class HealthOut(BaseModel):
     status: str
     demo_mode: bool
+
+
+class AuditLogOut(BaseModel):
+    id: str
+    user_id: str | None
+    user_email: str
+    action: str
+    resource_type: str
+    resource_id: str
+    detail: str
+    ip_address: str
+    created_at: datetime

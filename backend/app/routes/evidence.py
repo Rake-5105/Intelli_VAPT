@@ -1,10 +1,10 @@
-"""Evidence metadata routes."""
+"""Evidence metadata routes with authorization guards."""
 
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
-from ..auth import current_user
-from ..models import Evidence, User, get_db
+from ..auth import current_user, verify_project_access
+from ..models import Evidence, Project, User, get_db
 from ..schemas import EvidenceOut
 
 router = APIRouter(tags=["Evidence"])
@@ -12,7 +12,10 @@ router = APIRouter(tags=["Evidence"])
 
 @router.get("/api/projects/{project_id}/evidence", response_model=list[EvidenceOut])
 def evidence(project_id: str, db: Session = Depends(get_db), user: User = Depends(current_user)):
-    """List all evidence records for a project."""
+    """List all evidence records for a project with authorization check."""
+    project = db.get(Project, project_id)
+    verify_project_access(project, user, "view evidence for")
+
     return [
         {
             "id": e.id,

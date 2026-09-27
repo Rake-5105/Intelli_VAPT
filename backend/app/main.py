@@ -15,7 +15,7 @@ from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 
 from .auth import hasher
-from .middleware import SecurityHeadersMiddleware, register_rate_limiter
+from .middleware import RequestSizeLimiterMiddleware, SecurityHeadersMiddleware, register_rate_limiter
 from .models import (
     Asset,
     Base,
@@ -58,6 +58,7 @@ app.add_middleware(
 )
 
 # Security middleware
+app.add_middleware(RequestSizeLimiterMiddleware)
 app.add_middleware(SecurityHeadersMiddleware)
 register_rate_limiter(app)
 

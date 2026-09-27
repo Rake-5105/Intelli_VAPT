@@ -142,21 +142,42 @@ aside h2 {
   display: flex;
   flex-direction: column;
   gap: 14px;
-  padding-top: 18px;
+  padding-top: 16px;
   border-top: 1px solid var(--border);
 }
 
 .sidebar-identity {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
+  flex-direction: column;
+  gap: 12px;
   background: var(--bg-tertiary);
   border: 1px solid var(--border);
-  padding: 10px 12px;
+  padding: 12px;
   border-radius: 6px;
   box-sizing: border-box;
   width: 100%;
+}
+
+.sidebar-identity .user-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.sidebar-identity .user-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(254, 128, 25, 0.15);
+  color: var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-weight: 700;
+  font-size: 13px;
+  border: 1px solid rgba(254, 128, 25, 0.3);
 }
 
 .sidebar-identity .user-badge {
@@ -168,7 +189,7 @@ aside h2 {
 }
 
 .sidebar-identity .user-name {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
   color: var(--text-primary);
   white-space: nowrap;
@@ -178,18 +199,69 @@ aside h2 {
 }
 
 .sidebar-identity .role-pill {
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 700;
   color: var(--accent);
-  letter-spacing: 0.06em;
-  margin-top: 2px;
+  background: rgba(254, 128, 25, 0.12);
+  border: 1px solid rgba(254, 128, 25, 0.25);
+  padding: 1px 6px;
+  border-radius: 3px;
+  letter-spacing: 0.05em;
+  margin-top: 3px;
+  width: fit-content;
 }
 
-.sidebar-identity .logout {
-  padding: 6px 10px;
-  font-size: 13px;
+.sidebar-identity .sidebar-actions {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+}
+
+.sidebar-identity .action-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 6px 8px;
+  font-size: 12px;
+  font-weight: 600;
   border-radius: 4px;
-  flex-shrink: 0;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.sidebar-identity .action-btn:hover {
+  background: var(--border);
+  color: var(--text-primary);
+}
+
+.sidebar-identity .logout-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 6px 8px;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 4px;
+  background: rgba(251, 73, 52, 0.1);
+  border: 1px solid rgba(251, 73, 52, 0.25);
+  color: #fb4934;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.sidebar-identity .logout-btn:hover {
+  background: #fb4934;
+  color: #282828;
+  border-color: #fb4934;
 }
 
 aside footer {

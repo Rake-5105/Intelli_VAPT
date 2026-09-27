@@ -1,10 +1,11 @@
-"""Remediation task routes."""
+"""Remediation task routes with authorization guards and audit logging."""
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 
-from ..auth import current_user, require
-from ..models import Finding, RemediationTask, Role, User, get_db
+from ..audit import log_security_event
+from ..auth import current_user, require, verify_project_access
+from ..models import Finding, Project, RemediationTask, Role, User, get_db
 from ..schemas import RemediationIn, RemediationListOut, RemediationOut
 
 router = APIRouter(tags=["Remediation"])
@@ -14,12 +15,17 @@ router = APIRouter(tags=["Remediation"])
 def remediate(
     finding_id: str,
     data: RemediationIn,
+    request: Request,
     db: Session = Depends(get_db),
     user: User = Depends(require(Role.ADMIN, Role.SECURITY_ANALYST)),
 ):
-    """Create or update a remediation task for a finding."""
-    if not db.get(Finding, finding_id):
+    """Create or update a remediation task for a finding with authorization check."""
+    f = db.get(Finding, finding_id)
+    if not f:
         raise HTTPException(404, "Finding not found")
+
+    project = db.get(Project, f.project_id)
+    verify_project_access(project, user, "assign remediation on")
 
     task = db.query(RemediationTask).filter_by(finding_id=finding_id).first() or RemediationTask(
         finding_id=finding_id
@@ -30,6 +36,17 @@ def remediate(
     task.status = data.status
     db.add(task)
     db.commit()
+    db.refresh(task)
+
+    log_security_event(
+        db,
+        action="ASSIGN_REMEDIATION",
+        resource_type="remediation_task",
+        resource_id=task.id,
+        detail=f"Assigned remediation for finding '{f.title}' to '{task.assigned_to}' (due: {task.due_date}) in project '{project.name}'",
+        user=user,
+        request=request,
+    )
 
     return {
         "id": task.id,
@@ -47,7 +64,10 @@ def remediation(
     db: Session = Depends(get_db),
     user: User = Depends(current_user),
 ):
-    """List all remediation tasks for a project's findings."""
+    """List all remediation tasks for a project's findings with authorization check."""
+    project = db.get(Project, project_id)
+    verify_project_access(project, user, "view remediation tasks on")
+
     return [
         {
             "id": t.id,
