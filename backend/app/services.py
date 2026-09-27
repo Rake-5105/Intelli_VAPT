@@ -32,10 +32,30 @@ PROJECT_TOOLS_DIR = Path(__file__).resolve().parent.parent.parent / "tools" / "b
 def get_tool_binary(tool: str) -> str | None:
     """Find binary from environment variable, system PATH, or local tools/bin folder."""
     env_name = TOOL_ENV.get(tool, "")
-    configured = os.getenv(env_name, tool) if env_name else tool
+    configured = os.getenv(env_name, "")
+    if configured:
+        p = shutil.which(configured) or (configured if Path(configured).is_file() else None)
+        if p:
+            return str(p)
 
-    # 1. Check configured path or system PATH
-    found = shutil.which(configured) or (configured if Path(configured).is_file() else None)
+    # Priority check for Linux container binaries (avoids python cli package collisions)
+    if tool == "httpx":
+        for candidate in ["/usr/bin/httpx", "/usr/local/bin/httpx-pd"]:
+            if Path(candidate).is_file():
+                return candidate
+
+    # 1. Check system PATH
+    found = shutil.which(tool)
+    if found and tool == "httpx":
+        try:
+            with open(found, "rb") as f:
+                if f.read(2) == b"#!":
+                    # Python CLI script, check /usr/bin/httpx
+                    if Path("/usr/bin/httpx").is_file():
+                        return "/usr/bin/httpx"
+        except Exception:
+            pass
+
     if found:
         return found
 

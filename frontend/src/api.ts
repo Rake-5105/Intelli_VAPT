@@ -47,6 +47,24 @@ export async function loginRequest(email: string, password: string) {
 }
 
 /**
+ * Perform a registration request (no auth token required).
+ */
+export async function registerRequest(name: string, email: string, password: string) {
+  const response = await fetch(`${API}/api/auth/register`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ name, email, password }),
+  });
+
+  if (!response.ok) {
+    const body = await response.json().catch(() => ({ detail: "Registration failed" }));
+    throw new Error(body.detail || "Registration failed");
+  }
+
+  return response.json();
+}
+
+/**
  * Download a report blob and trigger a browser download.
  */
 export async function downloadReport(

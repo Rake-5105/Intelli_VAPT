@@ -29,8 +29,9 @@ RUN DOWNLOAD_URL=$(curl -s https://api.github.com/repos/projectdiscovery/subfind
     && echo "Downloading subfinder from: $DOWNLOAD_URL" \
     && curl -sL "$DOWNLOAD_URL" -o /tmp/subfinder.zip \
     && unzip -q /tmp/subfinder.zip -d /tmp/subfinder_dir \
-    && find /tmp/subfinder_dir -name subfinder -type f | head -1 | xargs -I{} cp {} /usr/local/bin/subfinder \
-    && chmod +x /usr/local/bin/subfinder \
+    && find /tmp/subfinder_dir -name subfinder -type f | head -1 | xargs -I{} cp {} /usr/bin/subfinder \
+    && chmod +x /usr/bin/subfinder \
+    && cp /usr/bin/subfinder /usr/local/bin/subfinder \
     && rm -rf /tmp/subfinder.zip /tmp/subfinder_dir
 
 # --- HTTPX ---
@@ -39,8 +40,9 @@ RUN DOWNLOAD_URL=$(curl -s https://api.github.com/repos/projectdiscovery/httpx/r
     && echo "Downloading httpx from: $DOWNLOAD_URL" \
     && curl -sL "$DOWNLOAD_URL" -o /tmp/httpx.zip \
     && unzip -q /tmp/httpx.zip -d /tmp/httpx_dir \
-    && find /tmp/httpx_dir -name httpx -type f | head -1 | xargs -I{} cp {} /usr/local/bin/httpx \
-    && chmod +x /usr/local/bin/httpx \
+    && find /tmp/httpx_dir -name httpx -type f | head -1 | xargs -I{} cp {} /usr/bin/httpx \
+    && chmod +x /usr/bin/httpx \
+    && cp /usr/bin/httpx /usr/local/bin/httpx \
     && rm -rf /tmp/httpx.zip /tmp/httpx_dir
 
 # --- Nuclei ---
@@ -49,23 +51,27 @@ RUN DOWNLOAD_URL=$(curl -s https://api.github.com/repos/projectdiscovery/nuclei/
     && echo "Downloading nuclei from: $DOWNLOAD_URL" \
     && curl -sL "$DOWNLOAD_URL" -o /tmp/nuclei.zip \
     && unzip -q /tmp/nuclei.zip -d /tmp/nuclei_dir \
-    && find /tmp/nuclei_dir -name nuclei -type f | head -1 | xargs -I{} cp {} /usr/local/bin/nuclei \
-    && chmod +x /usr/local/bin/nuclei \
+    && find /tmp/nuclei_dir -name nuclei -type f | head -1 | xargs -I{} cp {} /usr/bin/nuclei \
+    && chmod +x /usr/bin/nuclei \
+    && cp /usr/bin/nuclei /usr/local/bin/nuclei \
     && rm -rf /tmp/nuclei.zip /tmp/nuclei_dir
-
-# Verify all tools
-RUN echo "=== Tool Verification ===" \
-    && subfinder -version \
-    && httpx -version \
-    && nuclei -version \
-    && nmap --version | head -1 \
-    && echo "=== All tools OK ==="
 
 WORKDIR /app
 
 # Install Python dependencies
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
+
+# Restore ProjectDiscovery httpx binary if pip created an httpx CLI script
+RUN cp /usr/bin/httpx /usr/local/bin/httpx && chmod +x /usr/local/bin/httpx
+
+# Verify all security tools AFTER pip install
+RUN echo "=== Tool Verification ===" \
+    && subfinder -version \
+    && httpx -version \
+    && nuclei -version \
+    && nmap --version | head -1 \
+    && echo "=== All tools OK ==="
 
 # Copy application code
 COPY app ./app

@@ -28,7 +28,7 @@ import type { View } from "./types";
 import "./styles.css";
 
 function AppShell() {
-  const { token, user, login, logout } = useAuth();
+  const { token, user, loading, login, register, logout } = useAuth();
   const { addToast } = useToast();
   const ctx = useProject();
   const {
@@ -61,6 +61,21 @@ function AppShell() {
       addToast("Successfully signed in", "success");
     } catch (e) {
       addToast(e instanceof Error ? e.message : "Login failed", "error");
+    }
+  }
+
+  async function handleRegister(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const fd = new FormData(e.currentTarget);
+    try {
+      await register(
+        fd.get("name") as string,
+        fd.get("email") as string,
+        fd.get("password") as string
+      );
+      addToast("Account created successfully! Welcome to IntelliVAPT.", "success");
+    } catch (e) {
+      addToast(e instanceof Error ? e.message : "Registration failed", "error");
     }
   }
 
@@ -193,7 +208,20 @@ function AppShell() {
     setView(next);
   }
 
-  if (!token) return <Login onSubmit={handleLogin} error="" />;
+  if (loading) {
+    return (
+      <main className="auth-page">
+        <div style={{ textAlign: "center", color: "var(--accent)" }}>
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="pulse-icon">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          </svg>
+          <p style={{ marginTop: 12, fontSize: 14, color: "var(--text-muted)" }}>Verifying session…</p>
+        </div>
+      </main>
+    );
+  }
+
+  if (!token) return <Login onLogin={handleLogin} onRegister={handleRegister} error="" />;
 
   const activeTitle: Record<View, string> = {
     overview: "Assessment dashboard",
