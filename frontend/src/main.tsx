@@ -251,7 +251,17 @@ function AppShell() {
     );
   }
 
-  if (!token) return <Login onLogin={handleLogin} onRegister={handleRegister} error="" />;
+  if (!token) {
+    return (
+      <Login
+        onLogin={handleLogin}
+        onRegister={handleRegister}
+        error=""
+        theme={theme}
+        onToggleTheme={toggleTheme}
+      />
+    );
+  }
 
   const activeTitle: Record<View, string> = {
     overview: "Assessment dashboard",

@@ -3,14 +3,17 @@
  * Connects to /api/auth/login and /api/auth/register via AuthContext.
  */
 import { useState, type FormEvent } from "react";
+import { Sun, Moon, ShieldCheck, Check } from "lucide-react";
 
 type AuthPageProps = {
   onLogin: (e: FormEvent<HTMLFormElement>) => void;
   onRegister: (e: FormEvent<HTMLFormElement>) => void;
   error: string;
+  theme?: "dark" | "light";
+  onToggleTheme?: () => void;
 };
 
-export function Login({ onLogin, onRegister, error }: AuthPageProps) {
+export function Login({ onLogin, onRegister, error, theme = "dark", onToggleTheme }: AuthPageProps) {
   const [mode, setMode] = useState<"login" | "register">("login");
   const [emailErr, setEmailErr] = useState("");
   const [passErr, setPassErr] = useState("");
@@ -81,22 +84,41 @@ export function Login({ onLogin, onRegister, error }: AuthPageProps) {
 
   return (
     <main className="auth-page">
+      {onToggleTheme && (
+        <button
+          type="button"
+          className="auth-theme-toggle"
+          onClick={onToggleTheme}
+          aria-label={`Switch to ${theme === "dark" ? "Light" : "Dark"} Mode`}
+          title={`Switch to ${theme === "dark" ? "Light" : "Dark"} Mode`}
+        >
+          {theme === "dark" ? (
+            <>
+              <Sun size={15} className="theme-toggle-icon sun" />
+              <span>Light Mode</span>
+            </>
+          ) : (
+            <>
+              <Moon size={15} className="theme-toggle-icon moon" />
+              <span>Dark Mode</span>
+            </>
+          )}
+        </button>
+      )}
+
       <div className={`auth-container ${mode === "register" ? "auth-register-mode" : ""}`}>
         {/* ── Form Side ── */}
         <div className="auth-form-side">
           <header className="auth-header">
             <div className="auth-brand">
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="auth-brand-icon">
-                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-                <path d="m9 12 2 2 4-4"/>
-              </svg>
-              <span>IntelliVAPT</span>
+              <ShieldCheck size={18} className="auth-brand-icon" />
+              <span>INTELLIVAPT SUITE</span>
             </div>
             <h1>{mode === "login" ? "Welcome Back" : "Create Account"}</h1>
             <p>
               {mode === "login"
                 ? "Sign in to access your security assessments"
-                : "Get started with IntelliVAPT"}
+                : "Get started with automated VAPT workflows"}
             </p>
           </header>
 
@@ -261,10 +283,9 @@ export function Login({ onLogin, onRegister, error }: AuthPageProps) {
         {/* ── Visual Side ── */}
         <div className="auth-visual-side">
           <div className="auth-visual-content">
-            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="auth-visual-icon">
-              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-              <path d="m9 12 2 2 4-4"/>
-            </svg>
+            <div className="auth-visual-icon">
+              <ShieldCheck size={36} />
+            </div>
             <h2>IntelliVAPT Suite</h2>
             <p>
               Attack surface intelligence, vulnerability assessment,
@@ -273,20 +294,28 @@ export function Login({ onLogin, onRegister, error }: AuthPageProps) {
             </p>
             <ul className="auth-features">
               <li>
-                <span className="auth-feature-dot"></span>
-                Automated Security Scanning
+                <span className="auth-feature-dot">
+                  <Check size={10} strokeWidth={3} />
+                </span>
+                <span>Automated Security Scanning</span>
               </li>
               <li>
-                <span className="auth-feature-dot"></span>
-                Real-time Vulnerability Detection
+                <span className="auth-feature-dot">
+                  <Check size={10} strokeWidth={3} />
+                </span>
+                <span>Real-time Vulnerability Detection</span>
               </li>
               <li>
-                <span className="auth-feature-dot"></span>
-                Comprehensive PDF Reports
+                <span className="auth-feature-dot">
+                  <Check size={10} strokeWidth={3} />
+                </span>
+                <span>Comprehensive PDF Reports</span>
               </li>
               <li>
-                <span className="auth-feature-dot"></span>
-                Remediation Tracking
+                <span className="auth-feature-dot">
+                  <Check size={10} strokeWidth={3} />
+                </span>
+                <span>Remediation Tracking</span>
               </li>
             </ul>
           </div>
